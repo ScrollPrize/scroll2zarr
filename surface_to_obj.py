@@ -483,7 +483,10 @@ class TrglList:
         for pt in uv:
             print("vt", pt[0], pt[1], file=obj_fd)
         for trgl in self.trgls:
-            print("f", trgl[0] + 1, trgl[1] + 1, trgl[2] + 1, file=obj_fd)
+            print(
+                f"f {trgl[0] + 1}/{trgl[0] + 1}/{trgl[0] + 1} {trgl[1] + 1}/{trgl[1] + 1}/{trgl[1] + 1} {trgl[2] + 1}/{trgl[2] + 1}/{trgl[2] + 1}",
+                file=obj_fd,
+            )
 
     def saveAsObjFiles(self, xyz, uv, obj_name):
         self.saveAsObjFile(xyz, uv, obj_name)
