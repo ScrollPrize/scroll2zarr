@@ -785,9 +785,7 @@ def main():
         assert (
             len(scale_uv_out) == 2
         ), "scale-uv-out must be a comma-separated list of two numbers"
-        print("luv before", luv[0:5])
         luv *= scale_uv_out
-        print("luv after", luv[0:5])
 
     tlist.saveAsObjFiles(lxyz, luv, oobj)
 
