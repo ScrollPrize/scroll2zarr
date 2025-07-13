@@ -718,6 +718,10 @@ def main():
         "--uvwindow",
         help="Output only that part of the surface that lies within the given uv range.  Example (in uv coordinates): 2000:4000,:",
     )
+    parser.add_argument(
+        "--scale-uv-out",
+        help="Mutliple u and v by these factors during output. Example: 289536,13824",
+    )
     args = parser.parse_args()
 
     isurf = Path(args.input_surface_file)
@@ -775,6 +779,15 @@ def main():
         return
     pts = tlist.renumberTrgls()
     lxyz, luv = TrglList.renumberUsingPts(pts, xyzpts, uvpts)
+
+    if args.scale_uv_out is not None:
+        scale_uv_out = [float(s) for s in args.scale_uv_out.split(",")]
+        assert (
+            len(scale_uv_out) == 2
+        ), "scale-uv-out must be a comma-separated list of two numbers"
+        print("luv before", luv[0:5])
+        luv *= scale_uv_out
+        print("luv after", luv[0:5])
 
     tlist.saveAsObjFiles(lxyz, luv, oobj)
 
