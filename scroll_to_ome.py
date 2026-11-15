@@ -299,7 +299,7 @@ def tifs2zarr(tiffdir, zarrdir, chunk_size, obytes=0, slices=None, maxgb=None):
                         print("\nwriting, z range %d,%d"%(zs+z0, ze+z0))
                     else:
                         print("\nwriting, z range %d,%d  y range %d,%d"%(zs+z0, ze+z0, ys+y0, ye+y0))
-                    tzarr[zs:z,ys:ye,:] = buf[:ze-zs,:ye-ys,:]
+                    tzarr[zs:ze,ys:ye,:] = buf[:ze-zs,:ye-ys,:]
                     buf[:,:,:] = 0
                 prev_zc = cur_zc
             cur_bufz = z-cur_zc*chunk_size
