@@ -11,7 +11,7 @@ import zarr
 import fsspec
 import warnings
 from numcodecs.registry import codec_registry
-import skimage.transform
+from downsample import process_chunk
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
@@ -406,40 +406,6 @@ def zarr2zarr(izarrdir, ozarrdir, shift=(0,0,0), slices=(None,None,None), chunk_
                 else:
                     ozarr[o0[0]:o1[0], o0[1]:o1[1], o0[2]:o1[2]] = czarr[i0[0]:i1[0], i0[1]:i1[1], i0[2]:i1[2]] // divisor
 
-
-def process_chunk(args):
-    idata, odata, z, y, x, cz, cy, cx, algorithm = args
-    ibuf = idata[2*z*cz:(2*z*cz+2*cz),
-                 2*y*cy:(2*y*cy+2*cy),
-                 2*x*cx:(2*x*cx+2*cx)]
-    if np.max(ibuf) == 0:
-        return  # Skip if the block is empty to save computation
-
-    # pad ibuf to even in all directions
-    ibs = ibuf.shape
-    pad = (ibs[0]%2, ibs[1]%2, ibs[2]%2)
-    if any(pad):
-        ibuf = np.pad(ibuf, 
-                      ((0,pad[0]),(0,pad[1]),(0,pad[2])), 
-                      mode="symmetric")
-
-    # algorithms:
-    if algorithm == "nearest":
-        obuf = ibuf[::2, ::2, ::2]
-    elif algorithm == "gaussian":
-        obuf = np.round(skimage.transform.rescale(ibuf, .5, preserve_range=True))
-    elif algorithm == "mean":
-        obuf = np.round(skimage.transform.downscale_local_mean(ibuf, (2,2,2)))
-    elif algorithm == "max":
-        s = ibuf.shape
-        ibuf = ibuf.reshape((s[0]//2,2,s[1]//2,2,s[2]//2,2))
-        obuf = np.max(ibuf, axis=(1,3,5))
-    else:
-        raise ValueError(f"algorithm {algorithm} not valid")
-
-    odata[z*cz:(z*cz+cz),
-          y*cy:(y*cy+cy),
-          x*cx:(x*cx+cx)] = np.round(obuf)
 
 def resize(zarrdir, old_level, num_threads, algorithm="mean"):
     idir = zarrdir / ("%d"%old_level)

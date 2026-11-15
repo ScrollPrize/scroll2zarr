@@ -8,7 +8,7 @@ import copy
 import numpy as np
 import tifffile
 import zarr
-import skimage.transform
+from downsample import process_chunk
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
@@ -327,36 +327,6 @@ def divp1(s, c):
     if s%c > 0:
         n += 1
     return n
-
-def process_chunk(args):
-    idata, odata, z, y, x, cz, cy, cx, algorithm = args
-    ibuf = idata[2*z*cz:(2*z*cz+2*cz),
-                 2*y*cy:(2*y*cy+2*cy),
-                 2*x*cx:(2*x*cx+2*cx)]
-    if np.max(ibuf) == 0:
-        return  # Skip if the block is empty to save computation
-
-    # pad ibuf to even in all directions
-    ibs = ibuf.shape
-    pad = (ibs[0]%2, ibs[1]%2, ibs[2]%2)
-    if any(pad):
-        ibuf = np.pad(ibuf, 
-                      ((0,pad[0]),(0,pad[1]),(0,pad[2])), 
-                      mode="symmetric")
-
-    # algorithms:
-    if algorithm == "nearest":
-        obuf = ibuf[::2, ::2, ::2]
-    elif algorithm == "gaussian":
-        obuf = np.round(skimage.transform.rescale(ibuf, .5, preserve_range=True))
-    elif algorithm == "mean":
-        obuf = np.round(skimage.transform.downscale_local_mean(ibuf, (2,2,2)))
-    else:
-        raise ValueError(f"algorithm {algorithm} not valid")
-
-    odata[z*cz:(z*cz+cz),
-          y*cy:(y*cy+cy),
-          x*cx:(x*cx+cx)] = np.round(obuf)
 
 def resize(zarrdir, old_level, num_threads, algorithm="mean"):
     idir = zarrdir / ("%d"%old_level)
