@@ -288,8 +288,10 @@ def tifs2zarr(tiffdir, zarrdir, chunk_size, obytes=0, slices=None, maxgb=None):
             if nx != nx0 or ny != ny0:
                 print("\nFile %s is the wrong shape (%d, %d); expected %d, %d"%(tiffname,nx,ny,nx0,ny0))
                 continue
-            if xslice is not None and yslice is not None:
-                tarr = tarr[yslice, xslice]
+            if xslice is not None:
+                tarr = tarr[:, xslice]
+            if yslice is not None:
+                tarr = tarr[yslice, :]
             cur_zc = z // chunk_size
             if cur_zc != prev_zc:
                 if prev_zc >= 0:
