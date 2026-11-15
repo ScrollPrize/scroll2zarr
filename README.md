@@ -92,8 +92,9 @@ the `masked_volumes` directory
 
 Only a few packages need to be installed in order to run
 `scroll_to_ome`:
-* zarr
+* zarr (version 2; the scripts use APIs removed in version 3)
 * tifffile
+* imagecodecs (for compressed TIFF input, including LZW)
 * scikit-image
 * tqdm
 
