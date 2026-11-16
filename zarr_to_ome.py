@@ -9,12 +9,14 @@ import numpy as np
 import tifffile
 import zarr
 import fsspec
+from fsspec.implementations.local import LocalFileSystem
 import warnings
 from numcodecs.registry import codec_registry
 import skimage.transform
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
+from converter_paths import output_contains_input
 
 def init_o2z_globals():
     # Suppress warning about NestedDirectoryStore being removed
@@ -582,6 +584,12 @@ def zarr_to_ome_main():
         dtype = np.uint16
     
     if not rebuild_higher_levels:
+        filesystem, source_path = fsspec.core.url_to_fs(izarrdir)
+        if isinstance(filesystem, LocalFileSystem):
+            if not Path(source_path).exists():
+                parser.error("Input Zarr path does not exist")
+            if output_contains_input(source_path, ozarrdir):
+                parser.error("Output directory must not contain the input directory")
         if not overwrite:
             if ozarrdir.exists():
                 print("Error: Directory",ozarrdir,"already exists")

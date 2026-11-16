@@ -12,6 +12,7 @@ import skimage.transform
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing import cpu_count
+from converter_paths import output_contains_input
 
 '''
 # tiffdir = Path(r"C:\Vesuvius\scroll 1 2000-2030")
@@ -461,9 +462,11 @@ def main():
         return 1
     
     tiffdir = Path(args.input_tiff_dir)
-    if not tiffdir.exists() and args.first_new_level is None:
-        print("Input TIFF directory",tiffdir,"does not exist")
-        return 1
+    if args.first_new_level is None or args.zarr_only:
+        if not tiffdir.is_dir():
+            parser.error("Input TIFF path must be an existing directory")
+        if output_contains_input(tiffdir, zarrdir):
+            parser.error("Output directory must not contain the input directory")
 
     chunk_size = args.chunk_size
     nlevels = args.nlevels
