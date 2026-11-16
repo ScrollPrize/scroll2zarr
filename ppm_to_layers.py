@@ -291,11 +291,14 @@ def create_flattened_layers_threaded(params, create_stack):
     while j < len(sorted_blocks):
         print("j",j)
         with ThreadPoolExecutor(2*ncpus) as executor:
+            futures = []
             for i in range(j,j+nset):
                 if i >= len(sorted_blocks):
                     break
                 block = sorted_blocks[i]
-                executor.submit(process_block, block, step, ppmdata, zdata, nranges, output_volumes, i)
+                futures.append(executor.submit(process_block, block, step, ppmdata, zdata, nranges, output_volumes, i))
+            for future in futures:
+                future.result()
         j += nset
 
     prev = zdata.store.prev
