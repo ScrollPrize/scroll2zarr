@@ -369,7 +369,7 @@ def zarr2zarr(izarrdir, ozarrdir, shift=(0,0,0), slices=(None,None,None), chunk_
     # that should be copied to the output grid, 
     # in shifted (output-grid) coordinates
     cs0 = [max(os0[i], iws0[i]) for i in range(3)]
-    cs1 = [min(os1[i], iws1[i]) for i in range(3)]
+    cs1 = [min(os1[i], iws1[i], ishape[i] + shift[i]) for i in range(3)]
 
     store = zarr.NestedDirectoryStore(ozarrdir)
     ozarr = zarr.open(
