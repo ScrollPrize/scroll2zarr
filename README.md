@@ -544,6 +544,10 @@ limiting the input data used to a given range in x, y, and z.
     This is true whether `--shift` appears
     before or after `--window` in the command line.
 
+    If a window ends beyond the input array bounds, only overlapping
+    source voxels are copied. The requested output grid is retained and
+    uncovered regions are filled with zeros.
+
 * **bytes**: This option allows you to set
 the number of bytes per voxel in the output OME-Zarr data set.
 By default, the output data set will have the same number of bytes
