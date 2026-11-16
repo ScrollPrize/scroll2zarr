@@ -18,17 +18,21 @@ def trilinear(fxyz, data):
     data: 3d volume
     returns: interpolated data values at coordinates
     '''
-    ijk = fxyz.astype(np.int32)
+    shape = np.array(data.shape)
+    valid = ((fxyz >= 0) & (fxyz <= shape - 1)).all(axis=-1)
+    coordinates = np.where(valid[..., np.newaxis], fxyz, 0)
+    ijk = coordinates.astype(np.intp)
     i, j, k = ijk[...,0], ijk[...,1], ijk[...,2]
+    i1, j1, k1 = np.moveaxis(np.minimum(ijk + 1, shape - 1), -1, 0)
     V000 = data[ i   , j   ,  k   ]
-    V100 = data[(i+1), j   ,  k   ]
-    V010 = data[ i   ,(j+1),  k   ]
-    V001 = data[ i   , j   , (k+1)]
-    V101 = data[(i+1), j   , (k+1)]
-    V011 = data[ i   ,(j+1), (k+1)]
-    V110 = data[(i+1),(j+1),  k   ]
-    V111 = data[(i+1),(j+1), (k+1)]
-    xyz = fxyz - ijk
+    V100 = data[ i1  , j   ,  k   ]
+    V010 = data[ i   , j1  ,  k   ]
+    V001 = data[ i   , j   ,  k1  ]
+    V101 = data[ i1  , j   ,  k1  ]
+    V011 = data[ i   , j1  ,  k1  ]
+    V110 = data[ i1  , j1  ,  k   ]
+    V111 = data[ i1  , j1  ,  k1  ]
+    xyz = coordinates - ijk
     x, y, z = xyz[...,0], xyz[...,1], xyz[...,2]
     Vxyz = (V000 * (1 - x)*(1 - y)*(1 - z)
             + V100 * x * (1 - y) * (1 - z) +
@@ -38,7 +42,7 @@ def trilinear(fxyz, data):
             + V011 * (1 - x) * y * z +
             + V110 * x * y * (1 - z) +
             + V111 * x * y * z)
-    return Vxyz
+    return np.where(valid, Vxyz, 0)
 
 # TODO: try memory mapped directory store: 
 # https://github.com/zarr-developers/zarr-python/pull/377
@@ -212,6 +216,11 @@ def process_block(block, step, ppm_data, zdata, nranges, out_volumes, i):
     xmin = max(xmin,0)
     ymin = max(ymin,0)
     zmin = max(zmin,0)
+    xmax = min(xmax, zdata.shape[2] - 1)
+    ymax = min(ymax, zdata.shape[1] - 1)
+    zmax = min(zmax, zdata.shape[0] - 1)
+    if xmax < xmin or ymax < ymin or zmax < zmin:
+        return
     # print("lxyzns", lxyzns.shape, lxyzns.dtype)
     # print(xmin,xmax,ymin,ymax,zmin,zmax)
     data = zdata[zmin:zmax+1,ymin:ymax+1,xmin:xmax+1].astype(np.float32)
