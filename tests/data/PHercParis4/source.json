@@ -1,0 +1,14 @@
+{
+  "sample": "PHercParis4",
+  "source_url": "https://dl.ash2txt.org/full-scrolls/Scroll1/PHercParis4.volpkg/volumes/20230205180739/06500.tif",
+  "source_sha256": "63367c53b1d3ac8be43700ff07d89dfd81416844e8e6058fa1387b6221288845",
+  "source_slice": 6500,
+  "crop_yx": [
+    4000,
+    4032,
+    4000,
+    4032
+  ],
+  "fixture_sha256": "7afb1c91d3aba2d96eb2be5091f6d0209d8183322c6795293d4864e1e5cb2bc5",
+  "note": "One original uint16 CT crop, renumbered to zero for a single-plane conversion test; no intensity rescaling."
+}
