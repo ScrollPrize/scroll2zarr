@@ -402,9 +402,12 @@ def zarr2zarr(izarrdir, ozarrdir, shift=(0,0,0), slices=(None,None,None), chunk_
                 i1 = [o1[i]-shift[i] for i in range(3)]
                 if has_channel:
                     # Select the specified channel from 4D array
-                    ozarr[o0[0]:o1[0], o0[1]:o1[1], o0[2]:o1[2]] = czarr[channel, i0[0]:i1[0], i0[1]:i1[1], i0[2]:i1[2]] // divisor
+                    values = czarr[channel, i0[0]:i1[0], i0[1]:i1[1], i0[2]:i1[2]]
                 else:
-                    ozarr[o0[0]:o1[0], o0[1]:o1[1], o0[2]:o1[2]] = czarr[i0[0]:i1[0], i0[1]:i1[1], i0[2]:i1[2]] // divisor
+                    values = czarr[i0[0]:i1[0], i0[1]:i1[1], i0[2]:i1[2]]
+                if divisor != 1:
+                    values = values // divisor
+                ozarr[o0[0]:o1[0], o0[1]:o1[1], o0[2]:o1[2]] = values
 
 
 def process_chunk(args):
@@ -412,8 +415,8 @@ def process_chunk(args):
     ibuf = idata[2*z*cz:(2*z*cz+2*cz),
                  2*y*cy:(2*y*cy+2*cy),
                  2*x*cx:(2*x*cx+2*cx)]
-    if np.max(ibuf) == 0:
-        return  # Skip if the block is empty to save computation
+    if not np.any(ibuf):
+        return
 
     # pad ibuf to even in all directions
     ibs = ibuf.shape
@@ -427,9 +430,9 @@ def process_chunk(args):
     if algorithm == "nearest":
         obuf = ibuf[::2, ::2, ::2]
     elif algorithm == "gaussian":
-        obuf = np.round(skimage.transform.rescale(ibuf, .5, preserve_range=True))
+        obuf = skimage.transform.rescale(ibuf, .5, preserve_range=True)
     elif algorithm == "mean":
-        obuf = np.round(skimage.transform.downscale_local_mean(ibuf, (2,2,2)))
+        obuf = skimage.transform.downscale_local_mean(ibuf, (2,2,2))
     elif algorithm == "max":
         s = ibuf.shape
         ibuf = ibuf.reshape((s[0]//2,2,s[1]//2,2,s[2]//2,2))
@@ -437,9 +440,11 @@ def process_chunk(args):
     else:
         raise ValueError(f"algorithm {algorithm} not valid")
 
+    if not np.issubdtype(odata.dtype, np.floating):
+        obuf = np.round(obuf)
     odata[z*cz:(z*cz+cz),
           y*cy:(y*cy+cy),
-          x*cx:(x*cx+cx)] = np.round(obuf)
+          x*cx:(x*cx+cx)] = obuf
 
 def resize(zarrdir, old_level, num_threads, algorithm="mean"):
     idir = zarrdir / ("%d"%old_level)

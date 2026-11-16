@@ -551,8 +551,10 @@ per voxel as the input data set.
 
     If the input data set has voxels of type unsigned 16-bit integer,
     and an output type of unsigned 8-bit integer is desired, then
-    use `--bytes 1`.  Other data types, and other conversions, are
-    not supported.
+    use `--bytes 1`. Other type conversions are not supported.
+    Without `--bytes`, the input dtype is preserved, including floating-point
+    data. Floating-point values retain their fractional parts at every pyramid
+    level; integer and boolean output retains its existing rounding.
 
 * **compression**: This algorithm allows you to set the
 compression algorithm used on each chunk in the output data
