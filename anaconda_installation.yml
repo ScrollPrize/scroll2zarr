@@ -2,8 +2,9 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - zarr
+  - zarr<3
   - tifffile
+  - imagecodecs
   - scikit-image
   - fsspec
   - aiohttp

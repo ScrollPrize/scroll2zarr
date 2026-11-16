@@ -1,5 +1,6 @@
-zarr
+zarr<3
 tifffile
+imagecodecs
 scikit-image
 fsspec
 aiohttp
